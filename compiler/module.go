@@ -149,7 +149,7 @@ func (m *Module) CompileForInterpreter() (_retCode []InterpreterCode, retErr err
 
 	for i, f := range m.Base.FunctionIndexSpace {
 		//fmt.Printf("Compiling function %d (%+v) with %d locals\n", i, f.Sig, len(f.Body.Locals))
-		d, err := disasm.Disassemble(f, m.Base)
+		d, err := disasm.NewDisassembly(f, m.Base)
 		if err != nil {
 			panic(err)
 		}
