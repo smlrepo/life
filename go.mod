@@ -1,5 +1,8 @@
 module github.com/perlin-network/life
 
-replace github.com/go-interpreter/wagon v0.0.0-20180807160906-16de22136ff5 => github.com/losfair/wagon v0.0.0-20180807163237-f6497f251c75
+replace github.com/go-interpreter/wagon v0.0.0 => github.com/perlin-network/wagon v0.3.1-0.20180825141017-f8cb99b55a39
 
-require github.com/go-interpreter/wagon v0.0.0-20180807160906-16de22136ff5
+require (
+	github.com/go-interpreter/wagon v0.0.0
+	golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e // indirect
+)

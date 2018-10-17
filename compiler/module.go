@@ -6,15 +6,16 @@ import (
 	//"fmt"
 	"github.com/go-interpreter/wagon/disasm"
 	"github.com/go-interpreter/wagon/wasm"
-	"github.com/go-interpreter/wagon/wasm/leb128"
 	//"github.com/go-interpreter/wagon/validate"
+	"github.com/go-interpreter/wagon/wasm/leb128"
 	"github.com/perlin-network/life/compiler/opcodes"
 	"github.com/perlin-network/life/utils"
 )
 
 type Module struct {
-	Base          *wasm.Module
-	FunctionNames map[int]string
+	Base                 *wasm.Module
+	FunctionNames        map[int]string
+	DisableFloatingPoint bool
 }
 
 type InterpreterCode struct {
@@ -44,7 +45,7 @@ func LoadModule(raw []byte) (*Module, error) {
 
 	for _, sec := range m.Customs {
 		if sec.Name == "name" {
-			r := bytes.NewReader(sec.Bytes)
+			r := bytes.NewReader(sec.RawSection.Bytes)
 			for {
 				ty, err := leb128.ReadVarUint32(r)
 				if err != nil || ty != 1 {
@@ -62,7 +63,6 @@ func LoadModule(raw []byte) (*Module, error) {
 				if n != len(data) {
 					panic("len mismatch")
 				}
-
 				{
 					r := bytes.NewReader(data)
 					for {
@@ -103,7 +103,7 @@ func LoadModule(raw []byte) (*Module, error) {
 	}, nil
 }
 
-func (m *Module) CompileForInterpreter() (_retCode []InterpreterCode, retErr error) {
+func (m *Module) CompileForInterpreter(gp GasPolicy) (_retCode []InterpreterCode, retErr error) {
 	defer utils.CatchPanic(&retErr)
 
 	ret := make([]InterpreterCode, 0)
@@ -157,6 +157,12 @@ func (m *Module) CompileForInterpreter() (_retCode []InterpreterCode, retErr err
 		compiler := NewSSAFunctionCompiler(m.Base, d)
 		compiler.CallIndexOffset = numFuncImports
 		compiler.Compile(importTypeIDs)
+		if m.DisableFloatingPoint {
+			compiler.FilterFloatingPoint()
+		}
+		if gp != nil {
+			compiler.InsertGasCounters(gp)
+		}
 		//fmt.Println(compiler.Code)
 		//fmt.Printf("%+v\n", compiler.NewCFGraph())
 		numRegs := compiler.RegAlloc()
